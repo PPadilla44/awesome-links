@@ -1,5 +1,5 @@
 import { Link as LinkType } from "@prisma/client";
-import { extendType, intArg, objectType, stringArg } from "nexus";
+import { extendType, intArg, nonNull, objectType, stringArg } from "nexus";
 import { User } from "./User";
 
 export const Link = objectType({
@@ -117,6 +117,51 @@ export const LinksQuery = extendType({
           },
           edges: [],
         };
+      },
+    });
+  },
+});
+
+export const CreateLinkMutation = extendType({
+  type: "Mutation",
+  definition(t) {
+    t.nonNull.field("createLink", {
+      type: Link,
+      args: {
+        title: nonNull(stringArg()),
+        url: nonNull(stringArg()),
+        imageUrl: nonNull(stringArg()),
+        category: nonNull(stringArg()),
+        description: nonNull(stringArg()),
+      },
+      async resolve(_parent, args, ctx) {
+        if (!ctx.user) {
+          throw new Error("You need to be logged in to perform an action");
+        }
+
+        // const user = await ctx.prisma.user.findUnique({
+        //   where: {
+        //     email: ctx.user.email,
+        //   },
+        // });
+
+        // if (user.role !== "ADMIN") {
+        //   throw new Error(`You do not have permission to perform action`);
+        // }
+
+        const { title, url, imageUrl, category, description } = args;
+
+        const newLink = {
+          title,
+          url,
+          imageUrl,
+          category,
+          description,
+        };
+
+        return await ctx.prisma.link.create({
+          data: newLink,
+        });
       },
     });
   },
